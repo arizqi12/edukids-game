@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://api.iconify.design/twemoji:graduation-cap.svg"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#f0f4ff" />
+
+    <!-- Judul & Deskripsi SEO -->
+    <title>EduKids Game 🎓 - Kuis Edukasi Pintar Anak SD</title>
+    <meta
+      name="description"
+      content="Mainkan kuis edukasi interaktif untuk anak SD Kelas 1-6. Bebas login, cepat, dan seru untuk latihan di rumah maupun tugas sekolah!"
+    />
+
+    <!-- Open Graph untuk WhatsApp, Facebook & Social Media -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="EduKids Game 🎓 - Kuis Edukasi Pintar Anak SD"
+    />
+    <meta
+      property="og:description"
+      content="Kuis seru gratis untuk anak SD! Main bersama teman dan kumpulkan bintang sertifikatnya!"
+    />
+    <meta
+      property="og:image"
+      content="https://api.iconify.design/twemoji:lion-face.svg"
+    />
+
+    <!-- Script Google AdSense (Siap di-uncomment nanti) -->
+    <!-- 
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("SW Registered!", reg))
+            .catch((err) => console.log("SW Error:", err));
+        });
+      }
+    </script>
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body class="bg-[#f0f4ff] select-none">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "short_name": "EduKids",
+  "name": "EduKids Game - Kuis Edukasi Anak SD",
+  "icons": [
+    {
+      "src": "https://api.iconify.design/twemoji:graduation-cap.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f0f4ff",
+  "theme_color": "#f0f4ff",
+  "display": "standalone",
+  "orientation": "portrait"
+}
