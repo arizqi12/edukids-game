@@ -13,31 +13,21 @@
     />
     <meta name="theme-color" content="#f0f4ff" />
 
-    <title>EduKids Game 🎓 - Kuis Edukasi Pintar Anak</title>
+    <!-- Judul & Meta SEO -->
+    <title>EduKids Game 🎓 - Kuis Edukasi Pintar Anak SD</title>
     <meta
       name="description"
       content="Mainkan kuis edukasi interaktif untuk anak SD Kelas 1-6. Bebas login, cepat, dan seru untuk latihan di rumah maupun tugas sekolah!"
     />
 
+    <!-- Manifest PWA -->
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- KODE IKLAN MONETAG (ZONE 11966381) -->
-    <script>
-      (function (s) {
-        s.dataset.zone = "11966381";
-        s.src = "https://nap5k.com/tag.min.js";
-      })(
-        [document.documentElement, document.body]
-          .filter(Boolean)
-          .pop()
-          .appendChild(document.createElement("script")),
-      );
-    </script>
   </head>
   <body class="bg-[#f0f4ff] select-none">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 
+    <!-- Service Worker PWA -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
