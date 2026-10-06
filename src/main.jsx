@@ -1,14 +1,14 @@
-import { StrictMode } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
 import App from "./App.jsx";
+import "./index.css";
 
+// Import Analytics dari Vercel
 import { Analytics } from "@vercel/analytics/react";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
-    {/* 2. Pasang komponen Analytics di sini */}
     <Analytics />
   </React.StrictMode>,
 );
