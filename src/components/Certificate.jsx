@@ -1,10 +1,33 @@
 import React, { useRef, useState } from "react";
 import html2canvas from "html2canvas";
+import { saveOrUpdateScore } from "../services/dataService";
 
-export default function Certificate({ score, totalQuestions, onRestart }) {
+export default function Certificate({
+  score,
+  totalQuestions,
+  ageCategory = "3-5",
+  onRestart,
+}) {
   const [childName, setChildName] = useState("");
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const certRef = useRef(null);
+
+  // Simpan ke Leaderboard (Satu HP Satu Skor Tertinggi) & Tampilkan Sertifikat
+  const handleGenerate = async () => {
+    const nameToSave = childName.trim() || "Anak Pintar";
+    setIsSubmitting(true);
+
+    try {
+      // Panggil fungsi saveOrUpdateScore dengan parameter level umur yang aktif
+      await saveOrUpdateScore(nameToSave, score, ageCategory, "🦁");
+    } catch (error) {
+      console.error("Gagal menyimpan ke leaderboard:", error);
+    } finally {
+      setIsSubmitting(false);
+      setIsGenerated(true);
+    }
+  };
 
   const handleDownload = async () => {
     if (!certRef.current) return;
@@ -60,10 +83,11 @@ export default function Certificate({ score, totalQuestions, onRestart }) {
           />
 
           <button
-            onClick={() => setIsGenerated(true)}
-            className="w-full bg-[var(--color-kid-green)] text-black font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-lg cursor-pointer"
+            onClick={handleGenerate}
+            disabled={isSubmitting}
+            className="w-full bg-[var(--color-kid-green)] text-black font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-lg cursor-pointer disabled:opacity-50"
           >
-            Buat Sertifikat 🎓
+            {isSubmitting ? "Menyimpan..." : "Buat Sertifikat 🎓"}
           </button>
         </div>
       ) : (

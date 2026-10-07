@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment Variables (PENTING UNTUK FIREBASE)
+.env
+.env.local
+.env.production

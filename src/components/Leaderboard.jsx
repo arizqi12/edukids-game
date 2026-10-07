@@ -1,133 +1,127 @@
-import React, { useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import { submitStudentScore } from "../services/dataService"; // ✅ Pastikan path ini benar
+import React, { useEffect, useState } from "react";
+import { getTopScores } from "../services/scoreService";
 
-export default function Certificate({
-  score,
-  totalQuestions,
-  categoryTitle,
-  onRestart,
-}) {
-  const [childName, setChildName] = useState("");
-  const [isGenerated, setIsGenerated] = useState(false);
-  const certRef = useRef(null);
+export default function Leaderboard({ onClose, onBackToHome }) {
+  const [selectedCategory, setSelectedCategory] = useState("3-5");
+  const [scores, setScores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleGenerate = async () => {
-    if (!childName.trim()) {
-      alert("Silakan ketik nama terlebih dahulu!");
-      return;
-    }
+  // Daftar Kategori Level (Label Umur Dihapus)
+  const ageCategories = [
+    { id: "3-5", label: "Petualang Cilik 🎈" },
+    { id: "6-8", label: "Jagoan Pintar 🚀" },
+    { id: "9-12", label: "Penjelajah Hebat 🏆" },
+  ];
 
-    await submitStudentScore({
-      studentName: childName,
-      categoryTitle: categoryTitle,
-      score: score,
-      totalQuestions: totalQuestions,
-    });
+  useEffect(() => {
+    const fetchScores = async () => {
+      setLoading(true);
+      try {
+        const data = await getTopScores(selectedCategory);
+        setScores(data);
+      } catch (error) {
+        console.error("Gagal memuat leaderboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setIsGenerated(true);
-  };
-
-  const handleDownload = async () => {
-    if (!certRef.current) return;
-    const canvas = await html2canvas(certRef.current, {
-      scale: 2,
-      useCORS: true,
-    });
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = `Sertifikat-${childName || "AnakPintar"}.png`;
-    link.click();
-  };
+    fetchScores();
+  }, [selectedCategory]);
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center gap-6">
-      {!isGenerated ? (
-        <div className="w-full bg-white rounded-3xl p-6 shadow-xl border-4 border-emerald-400 flex flex-col items-center gap-4 text-center">
-          <span className="text-5xl">🏆</span>
-          <h2 className="text-2xl font-black text-slate-800">Hebat Sekali!</h2>
-          <p className="text-slate-600 font-bold text-sm">
-            Kamu berhasil menjawab{" "}
-            <span className="text-blue-600 font-black">{score}</span> dari{" "}
-            {totalQuestions} pertanyaan!
-          </p>
+    <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-xl border-4 border-[var(--color-kid-yellow)] flex flex-col items-center gap-4 relative">
+      {/* Tombol Tutup */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-xs font-bold text-gray-400 hover:text-gray-600 cursor-pointer"
+        >
+          ✕ Tutup
+        </button>
+      )}
 
-          <input
-            type="text"
-            placeholder="Ketik Nama Kamu..."
-            value={childName}
-            onChange={(e) => setChildName(e.target.value)}
-            className="w-full p-3.5 rounded-2xl border-2 border-slate-300 font-extrabold text-center text-base focus:border-blue-500 outline-none"
-          />
+      {/* Judul Modal */}
+      <div className="flex items-center gap-2 text-center mt-2">
+        <span className="text-3xl">🏆</span>
+        <h2 className="text-xl font-black text-gray-800">
+          Papan Peringkat Top 10
+        </h2>
+      </div>
 
+      {/* Tab Filter Kategori (Petualang Cilik, Jagoan Pintar, Penjelajah Hebat) */}
+      <div className="flex gap-1.5 w-full justify-center bg-gray-100 p-1.5 rounded-2xl">
+        {ageCategories.map((cat) => (
           <button
-            onClick={handleGenerate}
-            className="btn-chunky w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-base cursor-pointer border-2 border-emerald-400"
+            key={cat.id}
+            onClick={() => setSelectedCategory(cat.id)}
+            className={`flex-1 py-2 text-[11px] font-black rounded-xl transition-all cursor-pointer ${
+              selectedCategory === cat.id
+                ? "bg-[var(--color-kid-blue)] text-white shadow"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
           >
-            Simpan Skor & Sertifikat 🎓
+            {cat.label}
           </button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-4 w-full">
-          <div
-            ref={certRef}
-            className="w-[310px] h-[540px] bg-gradient-to-b from-blue-100 to-yellow-50 border-8 border-amber-300 rounded-3xl p-5 flex flex-col items-center justify-between text-center relative shadow-2xl"
-          >
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-3xl">🦁</span>
-              <span className="font-black text-lg text-blue-600">
-                EduKids Game
-              </span>
-            </div>
+        ))}
+      </div>
 
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="text-5xl">🎓</span>
-              <h1 className="text-lg font-black text-slate-700 uppercase tracking-wider">
-                Sertifikat Pintar
-              </h1>
-              <p className="text-xs text-slate-500 font-bold">
-                Diberikan Kepada:
-              </p>
-              <h2 className="text-2xl font-black text-pink-600 underline underline-offset-4">
-                {childName || "Anak Pintar"}
-              </h2>
-            </div>
-
-            <p className="text-xs font-bold text-slate-600 px-2">
-              Telah berhasil menyelesaikan Kuis dengan nilai <br />
-              <span className="text-lg font-black text-emerald-600">
-                ⭐ {score} / {totalQuestions} ⭐
-              </span>
-            </p>
-
-            <div className="w-full pt-3 border-t-2 border-dashed border-slate-300 flex items-center justify-between px-2">
-              <div className="text-left">
-                <p className="text-[9px] font-bold text-slate-400">
-                  Main gratis di:
-                </p>
-                <p className="text-xs font-black text-blue-600">
-                  edukids.vercel.app
-                </p>
+      {/* Daftar Peringkat */}
+      <div className="w-full flex flex-col gap-2 my-2 min-h-[160px] justify-center">
+        {loading ? (
+          <p className="text-center text-sm font-bold text-gray-400 animate-pulse">
+            Memuat nilai... ⏳
+          </p>
+        ) : scores.length === 0 ? (
+          <p className="text-center text-sm font-bold text-gray-400">
+            Belum ada skor tercatat di tingkat ini. <br />
+            Jadilah yang pertama! 🌟
+          </p>
+        ) : (
+          scores.map((item, index) => (
+            <div
+              key={item.id || index}
+              className={`flex items-center justify-between p-3 rounded-2xl font-bold text-sm ${
+                index === 0
+                  ? "bg-amber-100 border-2 border-amber-300 text-amber-900"
+                  : index === 1
+                    ? "bg-slate-100 border-2 border-slate-300 text-slate-800"
+                    : index === 2
+                      ? "bg-orange-100 border-2 border-orange-300 text-orange-900"
+                      : "bg-gray-50 text-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="w-6 font-black text-center text-base">
+                  {index === 0
+                    ? "🥇"
+                    : index === 1
+                      ? "🥈"
+                      : index === 2
+                        ? "🥉"
+                        : `#${index + 1}`}
+                </span>
+                <span>{item.avatar || "🦁"}</span>
+                <span className="truncate max-w-[140px]">
+                  {item.playerName || "Pemain"}
+                </span>
               </div>
+              <span className="font-black text-[var(--color-kid-blue)]">
+                {item.score} pt
+              </span>
             </div>
-          </div>
+          ))
+        )}
+      </div>
 
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={handleDownload}
-              className="btn-chunky flex-1 bg-blue-500 text-white font-black py-3 rounded-2xl text-xs cursor-pointer"
-            >
-              📥 Simpan Gambar
-            </button>
-            <button
-              onClick={onRestart}
-              className="btn-chunky bg-slate-200 text-slate-700 font-black px-4 py-3 rounded-2xl text-xs cursor-pointer"
-            >
-              🔄 Main Lagi
-            </button>
-          </div>
-        </div>
+      {/* Tombol Kembali ke Beranda */}
+      {onBackToHome && (
+        <button
+          onClick={onBackToHome}
+          className="w-full bg-[var(--color-kid-blue)] text-black font-black py-3 rounded-2xl shadow-lg active:scale-95 transition-all text-sm cursor-pointer mt-2"
+        >
+          Kembali ke Beranda
+        </button>
       )}
     </div>
   );
