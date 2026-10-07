@@ -1,5 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY || ""),
@@ -13,4 +17,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Gunakan initializeFirestore dengan eksperimen Long-Polling
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true, // 👈 Memaksa koneksi via HTTP Long-Polling agar tidak terblokir
+});
