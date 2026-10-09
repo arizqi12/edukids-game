@@ -5,11 +5,12 @@ import QuizCard from "./components/QuizCard";
 import Certificate from "./components/Certificate";
 import Leaderboard from "./components/Leaderboard";
 import AdBanner from "./components/AdBanner";
+import MultiplayerLobby from "./components/MultiplayerLobby";
 import {
   getQuizCategories,
   getLeaderboardScores,
 } from "./services/dataService";
-import { seedQuestions } from "./services/seedService";
+import { updatePlayerScore } from "./services/multiplayerService";
 
 // Daftar Level/Rentang Umur (Mapping ke ageCategory di Firestore)
 const AGE_LEVELS = [
@@ -48,7 +49,7 @@ const shuffleArray = (array) => {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("home"); // 'home' | 'levels' | 'categories' | 'quiz' | 'result' | 'leaderboard'
+  const [activeTab, setActiveTab] = useState("home"); // 'home' | 'levels' | 'categories' | 'quiz' | 'result' | 'leaderboard' | 'multiplayer'
   const [selectedAgeLevel, setSelectedAgeLevel] = useState(null);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -56,6 +57,9 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [leaderboardScores, setLeaderboardScores] = useState([]);
+
+  // State Khusus Mode Multiplayer
+  const [multiplayerRoom, setMultiplayerRoom] = useState(null);
 
   // Load Kategori Soal dari Firestore saat level umur dipilih
   useEffect(() => {
@@ -84,7 +88,7 @@ export default function App() {
     // 1. Acak seluruh bank soal yang ada di kategori/sub-kategori tersebut
     const shuffledQuestions = shuffleArray(questions);
 
-    // 2. Batasi jumlah soal (Default: maksimal 10 soal untuk siswa)
+    // 2. Batasi jumlah soal (Default: maksimal 10 soal)
     const selectedQuestions = shuffledQuestions.slice(0, maxLimit);
 
     // 3. Acak pilihan jawaban (A, B, C, D) untuk setiap soal yang terpilih
@@ -116,9 +120,31 @@ export default function App() {
     setActiveTab("quiz");
   };
 
+  // Handler Dimulainya Permainan Mode Multiplayer dari Lobi
+  const handleStartMultiplayerGame = async (roomData) => {
+    setMultiplayerRoom(roomData);
+    const ageCategory = roomData.ageCategory || "3-5";
+
+    // Ambil materi kuis sesuai level umur room
+    const loadedCategories = await getQuizCategories(ageCategory);
+    if (loadedCategories.length > 0) {
+      // Pilih kategori acak atau topik campuran untuk kuis multiplayer
+      handleSelectCategory(loadedCategories[0]);
+    } else {
+      alert("Materi kuis untuk level ini belum siap.");
+    }
+  };
+
   const handleAnswer = (isCorrect) => {
+    let newScore = score;
     if (isCorrect) {
-      setScore((prev) => prev + 1);
+      newScore = score + 1;
+      setScore(newScore);
+    }
+
+    // Jika sedang dalam mode Multiplayer, sync skor terbaru ke Firestore
+    if (multiplayerRoom?.roomCode) {
+      updatePlayerScore(multiplayerRoom.roomCode, newScore);
     }
 
     const nextIndex = currentIndex + 1;
@@ -142,6 +168,7 @@ export default function App() {
     setCurrentIndex(0);
     setScore(0);
     setIsFinished(false);
+    setMultiplayerRoom(null);
   };
 
   return (
@@ -185,12 +212,16 @@ export default function App() {
                   🚀 Ayo Mulai Kuis!
                 </button>
 
-                <div className="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 flex items-center justify-center gap-2">
+                {/* Tombol Fitur Multiplayer */}
+                <button
+                  onClick={() => setActiveTab("multiplayer")}
+                  className="bg-sky-50 hover:bg-sky-100 border-2 border-sky-200 rounded-2xl p-3 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                >
                   <span className="text-xl">👫</span>
                   <span className="text-xs font-extrabold text-sky-800">
-                    Mainnya bersama teman lebih seru!
+                    Main Bersama Teman (Lobi Room) 🎮
                   </span>
-                </div>
+                </button>
 
                 <button
                   onClick={() => setActiveTab("leaderboard")}
@@ -202,7 +233,15 @@ export default function App() {
             </div>
           )}
 
-          {/* 2. PILIH LEVEL PETUALANGAN (RENTANG UMUR) */}
+          {/* 2. MODE MULTIPLAYER (LOBI ROOM) */}
+          {activeTab === "multiplayer" && (
+            <MultiplayerLobby
+              onStartGame={handleStartMultiplayerGame}
+              onBack={() => setActiveTab("home")}
+            />
+          )}
+
+          {/* 3. PILIH LEVEL PETUALANGAN (RENTANG UMUR) */}
           {activeTab === "levels" && (
             <div className="w-full bg-white rounded-3xl p-5 shadow-lg border-2 border-slate-100 flex flex-col items-center gap-4 text-center">
               <div className="bg-amber-100 border border-amber-200 rounded-2xl p-3 w-full flex items-center justify-center gap-3">
@@ -251,7 +290,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 3. PILIH KATEGORI MATA PELAJARAN */}
+          {/* 4. PILIH KATEGORI MATA PELAJARAN */}
           {activeTab === "categories" && (
             <div className="w-full bg-white rounded-3xl p-5 shadow-lg border-2 border-slate-100 flex flex-col items-center gap-4 text-center">
               <div className="bg-sky-100 border border-sky-200 rounded-2xl p-3 w-full flex items-center justify-center gap-3">
@@ -277,7 +316,9 @@ export default function App() {
                     <button
                       key={cat.id}
                       onClick={() => handleSelectCategory(cat)}
-                      className={`btn-chunky p-3.5 rounded-2xl border-2 flex items-center justify-between gap-3 cursor-pointer transition-all active:scale-98 ${cat.color || "bg-slate-50 border-slate-200"}`}
+                      className={`btn-chunky p-3.5 rounded-2xl border-2 flex items-center justify-between gap-3 cursor-pointer transition-all active:scale-98 ${
+                        cat.color || "bg-slate-50 border-slate-200"
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-slate-100 shadow-sm">
@@ -310,7 +351,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 4. KUIS */}
+          {/* 5. KUIS */}
           {activeTab === "quiz" && selectedCategory && (
             <QuizCard
               questionData={selectedCategory.questions[currentIndex]}
@@ -318,7 +359,7 @@ export default function App() {
             />
           )}
 
-          {/* 5. HASIL & SERTIFIKAT */}
+          {/* 6. HASIL & SERTIFIKAT */}
           {activeTab === "result" && selectedCategory && (
             <Certificate
               score={score}
@@ -328,7 +369,7 @@ export default function App() {
             />
           )}
 
-          {/* 6. LEADERBOARD */}
+          {/* 7. LEADERBOARD */}
           {activeTab === "leaderboard" && (
             <Leaderboard
               onClose={() => setActiveTab("home")}

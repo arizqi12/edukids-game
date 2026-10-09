@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 
 export default function AdBanner({
   clientPublisherId = "ca-pub-4113212026336034", // Ganti dengan Publisher ID milikmu
-  slotId = "1234567890", // Ganti dengan Slot ID AdSense milikmu
+  slotId = "5143553952", // Ganti dengan Slot ID AdSense milikmu
 }) {
   const isPushed = useRef(false);
 
